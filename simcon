@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+
+require 'singleton'
+
+def log message
+  puts "===> #{message}".green
+end
+
+def error massage
+  puts massage.red
+  exit 1
+end
+
+class String
+  def colorize color_code
+    "\e[#{color_code}m#{self}\e[0m"
+  end
+
+  def red() colorize 31 end
+  def green() colorize 32 end
+end
+
+class Configuration
+
+  include Singleton
+  attr_reader :configuration
+
+  def initialize
+    configuration = ARGV[0]
+    case configuration
+    when "Development", "development", "Debug", "debug" then
+      @configuration = "Debug"
+    when "Staging", "staging" then
+      @configuration = "Staging"
+    when "Production", "production" then
+      @configuration = "Production"
+    end
+  end
+end
+

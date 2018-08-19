@@ -38,3 +38,33 @@ class Configuration
   end
 end
 
+class App
+
+  def initialize app
+    @app = app
+  end
+
+  def path
+    app_dir = `ls ~/Library/Developer/Xcode/DerivedData/ | grep #{@app}`.gsub(/\n/, "")
+    build_dir_path = "~/Library/Developer/Xcode/DerivedData/#{app_dir}/Build/Products"
+    app = `ls #{build_dir_path} | grep #{Configuration.instance.configuration} | grep iphonesimulator`.gsub(/\n/, "")
+    "#{build_dir_path}/#{app}/#{@app}.app"
+  end
+
+  def bundle_identifier
+    case Configuration.instance.configuration
+    when "Debug" then
+      "development bundle identifier"
+    when "Staging" then
+      "staging bundle identifier"
+    when "Production" then
+      "production bundle identifier"
+    end
+  end
+
+  def build
+    `xcodebuild -workspace #{@app}.xcworkspace -scheme #{@app} -configuration #{Configuration.instance.configuration} -sdk iphonesimulator > /dev/null 2>&1`
+    error 'failed build' if $?.exitstatus == 1
+  end
+end
+

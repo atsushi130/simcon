@@ -38,6 +38,28 @@ class Configuration
   end
 end
 
+class Simcon
+
+  attr_reader :simulator
+  attr_reader :app
+
+  def initialize
+    simulators = `xcrun simctl list`.split("\n")
+    available_simulators = simulators
+        .select { |simulator| simulator.start_with?("    iPhone") }
+        .map { |simulator| Simulator.new(simulator) }
+    booted_simulator = available_simulators
+        .select { |simulator|
+          simulator.status == "Booted"
+        }
+        .first
+
+    @simulator = booted_simulator.nil? ? available_simulators.first : booted_simulator
+    @app = App.new("app name")
+  end
+end
+
+
 class Simulator
 
   attr_reader :name

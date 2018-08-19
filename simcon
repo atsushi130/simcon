@@ -38,6 +38,47 @@ class Configuration
   end
 end
 
+class Simulator
+
+  attr_reader :name
+  attr_reader :uuid
+  attr_reader :status
+
+  def initialize simulator
+    /    iPhone (.*) \((.*)\) \((.*)\)/ =~ simulator
+    @name   = "iPhone #{$1}"
+    @uuid   = $2
+    @status = $3
+  end
+
+  def reinstall app
+    self.uninstall app
+    `wait`
+    self.install app
+  end
+
+  def install app
+    `xcrun simctl install #{@uuid} #{app.path} > /dev/null 2>&1`
+    error 'failed install' if $?.exitstatus == 1
+  end
+
+  def uninstall app
+    `xcrun simctl uninstall #{@uuid} #{app.bundle_identifier} > /dev/null 2>&1`
+    error 'failed uninstall' if $?.exitstatus == 1
+  end
+
+  def launch app
+    `xcrun simctl launch --console #{@uuid} #{app.bundle_identifier} > /dev/null 2>&1`
+    error 'failed launch' if $?.exitstatus == 1
+  end
+
+  def documents
+    app_uuid = `ls -lt ~/Library/Developer/CoreSimulator/Devices/#{@uuid}/data/Containers/Data/Application | awk 'NR == 2 {print $9}'`
+    "~/Library/Developer/CoreSimulator/Devices/#{@uuid}/data/Containers/Data/Application/#{app_uuid}/Documents".gsub(/\n/, "")
+  end
+end
+
+
 class App
 
   def initialize app
